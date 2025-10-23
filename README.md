@@ -58,7 +58,7 @@ $ npm run test:cov
 ```
 
 ## Technologies used
-
+```
 NestJS - as the backend framework
 
 TypeORM - as the Object-Relational Mapper (ORM)
@@ -70,6 +70,6 @@ Postman - for Testing
 TypeScript - as the programming language
 
 Docker Desktop 
-
+```
 
 Nest is [MIT licensed](https://github.com/nestjs/nest/blob/master/LICENSE).
