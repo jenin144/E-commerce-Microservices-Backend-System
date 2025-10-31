@@ -1,0 +1,78 @@
+version: '3.9'
+services:
+  postgres_users:
+    image: postgres:15-alpine
+    container_name: postgres_users
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: users_db
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
+  postgres_products:
+      image: postgres:15-alpine
+      container_name: postgres_products
+      environment:
+        POSTGRES_USER: postgresproducts
+        POSTGRES_PASSWORD: postgres
+        POSTGRES_DB: products_db
+      ports:
+        - "5433:5432"
+      volumes:
+        - postgres_products_data:/var/lib/postgresql/data
+    
+  rabbitmq:
+    image: rabbitmq:3-management
+    container_name: rabbitmq
+    ports:
+      - "5672:5672"
+      - "15672:15672"
+
+  users-service:
+    build: ./users-service
+    container_name: users-service
+    env_file: ./users-service/.env
+    depends_on:
+      - postgres_users
+      - rabbitmq
+    ports:
+      - "3002:3002"
+
+  auth-service:
+    build: ./auth-service
+    container_name: auth-service
+    env_file: ./auth-service/.env
+    depends_on:
+      - users-service
+      - rabbitmq
+    ports:
+      - "3001:3001"
+
+  products-service:
+    build: ./products-service
+    container_name: products-service
+    env_file: ./products-service/.env
+    depends_on:
+      - postgres_products
+      - rabbitmq
+    ports:
+      - "3003:3003"
+
+  gateway:
+    build: ./gateway
+    container_name: gateway
+    env_file: ./gateway/.env
+    depends_on:
+      - auth-service
+      - users-service
+      - products-service
+      - rabbitmq
+    ports:
+      - "3000:3000"
+
+volumes:
+  postgres_data:
+  postgres_products_data:

@@ -1,0 +1,4 @@
+# Gateway environment variables
+RABBITMQ_URL=
+PORT=
+JWT_SECRET=

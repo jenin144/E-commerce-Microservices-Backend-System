@@ -1,71 +1,65 @@
+// products/products.service.ts
+
 import {
   Injectable,
   NotFoundException,
   BadRequestException,
 } from '@nestjs/common';
+import { InjectRepository } from '@nestjs/typeorm';
+import { Repository } from 'typeorm';
 import { Product } from './product.entity';
 
 @Injectable()
 export class ProductsService {
-  private products: Product[] = [
-    {
-      id: 1,
-      name: 'Laptop',
-      description: 'Gaming Laptop',
-      price: 1200,
-      quantity: 10,
-    },
-    {
-      id: 2,
-      name: 'Mouse',
-      description: 'Wireless Mouse',
-      price: 50,
-      quantity: 20,
-    },
-  ];
+  // 1. إزالة المصفوفة
+  // private products: Product[] = [ ... ];
+  
+  // 2. حقن الـ Repository
+  constructor(
+    @InjectRepository(Product)
+    private productsRepository: Repository<Product>,
+  ) {}
 
   async findAll(): Promise<Product[]> {
-    return this.products;
+    return this.productsRepository.find();
   }
 
   async findOne(id: number): Promise<Product> {
-    const product = this.products.find((p) => p.id === id);
+    const product = await this.productsRepository.findOneBy({ id: id });
     if (!product) throw new NotFoundException('Product not found');
     return product;
   }
 
   async createProduct(product: Product): Promise<Product> {
-    const exists = this.products.find((p) => p.id === product.id);
-    if (exists) throw new BadRequestException('Product ID already exists');
-    this.products.push(product);
-    return product;
+    // التحقق من ID ليس ضرورياً إذا كان PrimaryGeneratedColumn
+    const newProduct = this.productsRepository.create(product);
+    return this.productsRepository.save(newProduct);
   }
 
   async updateProduct(id: number, update: Partial<Product>): Promise<Product> {
-    const product = await this.findOne(id);
-    if (!product) throw new NotFoundException('Product not found');
-
+    const product = await this.findOne(id); // سيعطي خطأ NotFound إذا لم يكن موجوداً
+    
     Object.assign(product, update);
-    return product;
+    return this.productsRepository.save(product);
   }
 
   async deleteProduct(id: number): Promise<void> {
-    const index = this.products.findIndex((p) => p.id === id);
-    if (index === -1) throw new NotFoundException('Product not found');
-    this.products.splice(index, 1);
+    const product = await this.findOne(id); // تأكد أنه موجود
+    await this.productsRepository.remove(product);
   }
-  
+
   async decreaseQuantity(id: number, qty: number): Promise<void> {
     const product = await this.findOne(id);
-    if (!product) throw new NotFoundException('Product not found');
     if (product.quantity < qty)
       throw new BadRequestException('Not enough stock');
+      
     product.quantity -= qty;
+    await this.productsRepository.save(product);
   }
 
   async increaseQuantity(id: number, qty: number): Promise<void> {
     const product = await this.findOne(id);
-    if (!product) throw new NotFoundException('Product not found');
     product.quantity += qty;
+    await this.productsRepository.save(product);
   }
 }
