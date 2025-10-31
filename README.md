@@ -65,6 +65,8 @@ TypeORM - as the Object-Relational Mapper (ORM)
 
 Postgres - as the database
 
+RabbitMQ - as the message broker for microservices communication
+
 Postman - for Testing
 
 TypeScript - as the programming language
